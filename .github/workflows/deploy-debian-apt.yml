@@ -1,5 +1,5 @@
 # Build Open WebUI .deb and publish to the private APT repository.
-# Branch: feat/deb-package — uses packaging/deb/build.sh (uv + fpm).
+# Manual publish only — Actions → Deploy Debian APT → Run workflow
 name: Deploy Debian APT
 
 on:
@@ -14,16 +14,6 @@ on:
         required: true
         default: "jammy"
         type: string
-
-  push:
-    branches: [feat/deb-package]
-    paths:
-      - "packaging/deb/**"
-      - "package.json"
-      - "pyproject.toml"
-      - "uv.lock"
-      - "hatch_build.py"
-      - ".github/workflows/deploy-debian-apt.yml"
 
 concurrency:
   group: deb-publish-open-webui
