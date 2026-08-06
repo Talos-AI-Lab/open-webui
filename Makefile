@@ -20,6 +20,9 @@ startAndBuild:
 stop:
 	$(DOCKER_COMPOSE) stop
 
+deb:
+	packaging/deb/build.sh
+
 update:
 	# Calls the LLM update script
 	chmod +x update_ollama_models.sh

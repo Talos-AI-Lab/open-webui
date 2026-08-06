@@ -1,0 +1,17 @@
+[Unit]
+Description=Open WebUI
+After=network.target
+
+[Service]
+Type=simple
+User=open-webui
+Group=open-webui
+EnvironmentFile=/etc/open-webui/open-webui.env
+ExecStart=/opt/open-webui/venv/bin/open-webui serve --host 0.0.0.0 --port ${PORT}
+WorkingDirectory=/opt/open-webui
+StateDirectory=open-webui
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
