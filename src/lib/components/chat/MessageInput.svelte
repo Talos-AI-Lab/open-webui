@@ -558,6 +558,188 @@
 
 	let loaded = false;
 	let recording = false;
+	let browserDictationActive = false;
+	let browserSpeechRecognition: any = null;
+	let browserDictationStopTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	const BROWSER_DICTATION_SILENCE_TIMEOUT_MS = 2000;
+	const BROWSER_DICTATION_LOG_PREFIX = '[browser-dictation]';
+
+	const logBrowserDictation = (message: string, data: Record<string, unknown> = {}) => {
+		console.log(BROWSER_DICTATION_LOG_PREFIX, message, data);
+	};
+
+	type BrowserSpeechRecognitionConstructor = new () => any;
+
+	const getBrowserSpeechRecognitionConstructor = (): BrowserSpeechRecognitionConstructor | null => {
+		if (typeof window === 'undefined') {
+			return null;
+		}
+
+		const speechWindow = window as Window & {
+			SpeechRecognition?: BrowserSpeechRecognitionConstructor;
+			webkitSpeechRecognition?: BrowserSpeechRecognitionConstructor;
+		};
+
+		return speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition ?? null;
+	};
+
+	const clearBrowserDictationStopTimeout = () => {
+		if (browserDictationStopTimeout) {
+			clearTimeout(browserDictationStopTimeout);
+			browserDictationStopTimeout = null;
+			logBrowserDictation('silence timer cleared');
+		}
+	};
+
+	const cleanupBrowserDictation = () => {
+		clearBrowserDictationStopTimeout();
+		browserDictationActive = false;
+		browserSpeechRecognition = null;
+		logBrowserDictation('cleanup complete');
+	};
+
+	const scheduleBrowserDictationStop = () => {
+		clearBrowserDictationStopTimeout();
+
+		logBrowserDictation('silence timer scheduled', {
+			timeoutMs: BROWSER_DICTATION_SILENCE_TIMEOUT_MS
+		});
+
+		browserDictationStopTimeout = setTimeout(() => {
+			browserDictationStopTimeout = null;
+			logBrowserDictation('silence timer fired, stopping recognition');
+			stopBrowserDictation();
+		}, BROWSER_DICTATION_SILENCE_TIMEOUT_MS);
+	};
+
+	const stopBrowserDictation = () => {
+		clearBrowserDictationStopTimeout();
+
+		if (!browserSpeechRecognition) {
+			logBrowserDictation('stop requested without active recognition');
+			cleanupBrowserDictation();
+			return;
+		}
+
+		try {
+			logBrowserDictation('stop requested');
+			browserSpeechRecognition.stop();
+		} catch (error) {
+			logBrowserDictation('stop failed, cleaning up', { error });
+			cleanupBrowserDictation();
+		}
+	};
+
+	const abortBrowserDictation = () => {
+		if (browserSpeechRecognition) {
+			logBrowserDictation('abort requested');
+			browserSpeechRecognition.onresult = null;
+			browserSpeechRecognition.onerror = null;
+			browserSpeechRecognition.onend = null;
+			browserSpeechRecognition.onspeechstart = null;
+			browserSpeechRecognition.onspeechend = null;
+			browserSpeechRecognition.abort?.();
+		}
+
+		cleanupBrowserDictation();
+	};
+
+	const startBrowserDictation = async () => {
+		if (browserDictationActive) {
+			stopBrowserDictation();
+			return;
+		}
+
+		const SpeechRecognition = getBrowserSpeechRecognitionConstructor();
+
+		if (!SpeechRecognition) {
+			logBrowserDictation('SpeechRecognition unavailable');
+			toast.error($i18n.t('Browser speech recognition is not supported in this browser.'));
+			return;
+		}
+
+		const recognition = new SpeechRecognition();
+		browserSpeechRecognition = recognition;
+		browserDictationActive = true;
+
+		recognition.continuous = true;
+		recognition.interimResults = false;
+		recognition.lang = $settings?.audio?.stt?.language || navigator.language || 'en-US';
+
+		logBrowserDictation('start requested', {
+			continuous: recognition.continuous,
+			interimResults: recognition.interimResults,
+			lang: recognition.lang
+		});
+
+		recognition.onspeechstart = () => {
+			logBrowserDictation('speech start');
+			clearBrowserDictationStopTimeout();
+		};
+
+		recognition.onspeechend = () => {
+			logBrowserDictation('speech end');
+			scheduleBrowserDictationStop();
+		};
+
+		recognition.onresult = async (event: any) => {
+			logBrowserDictation('result event', {
+				resultIndex: event.resultIndex,
+				resultCount: event.results?.length
+			});
+
+			clearBrowserDictationStopTimeout();
+
+			const transcripts: string[] = [];
+
+			for (let i = event.resultIndex ?? 0; i < event.results.length; i++) {
+				const result = event.results[i];
+
+				if (result?.isFinal) {
+					transcripts.push(result[0]?.transcript ?? '');
+				}
+			}
+
+			const text = transcripts.join(' ').trim();
+
+			if (text) {
+				logBrowserDictation('final transcript received', { text });
+				await insertTextAtCursor(`${text} `);
+				logBrowserDictation('transcript inserted into chat input', { text });
+				scheduleBrowserDictationStop();
+			} else {
+				logBrowserDictation('result event had no final transcript');
+			}
+		};
+
+		recognition.onerror = (event: any) => {
+			logBrowserDictation('error event', { error: event.error });
+
+			if (!['aborted', 'no-speech'].includes(event.error)) {
+				toast.error($i18n.t(`Speech recognition error: {{error}}`, { error: event.error }));
+			}
+
+			cleanupBrowserDictation();
+		};
+
+		recognition.onend = async () => {
+			logBrowserDictation('end event');
+			cleanupBrowserDictation();
+			await tick();
+			document.getElementById('chat-input')?.focus();
+			logBrowserDictation('chat input focused after end');
+		};
+
+		try {
+			recognition.start();
+			logBrowserDictation('recognition.start() called');
+		} catch (error) {
+			logBrowserDictation('recognition.start() failed', { error });
+			cleanupBrowserDictation();
+			toast.error($i18n.t('Error starting speech recognition.'));
+		}
+	};
 
 	let isComposing = false;
 	// Safari has a bug where compositionend is not triggered correctly #16615
@@ -1108,7 +1290,9 @@
 			matchKeybinding(e) === Shortcut.TOGGLE_DICTATION
 		) {
 			e.preventDefault();
-			if (recording) {
+			if (browserDictationActive) {
+				stopBrowserDictation();
+			} else if (recording) {
 				// Confirm and stop recording
 				document.getElementById('confirm-recording-button')?.click();
 			} else {
@@ -1120,6 +1304,7 @@
 
 		if (e.key === 'Escape') {
 			console.log('Escape');
+			stopBrowserDictation();
 			dragged = false;
 		}
 	};
@@ -1335,6 +1520,8 @@
 				dropzoneElement.removeEventListener('drop', onDrop, true);
 				dropzoneElement.removeEventListener('dragleave', onDragLeave);
 			}
+
+			abortBrowserDictation();
 		};
 	});
 </script>
@@ -2294,35 +2481,14 @@
 												<Tooltip content={$i18n.t('Dictate')}>
 													<button
 														id="voice-input-button"
-														class=" text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5 self-center mr-0.5"
+														class="{browserDictationActive
+															? 'bg-indigo-500 text-white dark:bg-indigo-400 dark:text-gray-950'
+															: 'text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200'} transition rounded-full p-1.5 self-center mr-0.5"
 														type="button"
-														on:click={async () => {
-															try {
-																let stream = await navigator.mediaDevices
-																	.getUserMedia({ audio: true })
-																	.catch(function (err) {
-																		toast.error(
-																			$i18n.t(
-																				`Permission denied when accessing microphone: {{error}}`,
-																				{
-																					error: err
-																				}
-																			)
-																		);
-																		return null;
-																	});
-
-																if (stream) {
-																	recording = true;
-																	const tracks = stream.getTracks();
-																	tracks.forEach((track) => track.stop());
-																}
-																stream = null;
-															} catch {
-																toast.error($i18n.t('Permission denied when accessing microphone'));
-															}
-														}}
-														aria-label="Voice Input"
+														on:click={startBrowserDictation}
+														aria-label={browserDictationActive
+															? $i18n.t('Stop dictation')
+															: $i18n.t('Voice Input')}
 													>
 														<Mic className="size-[18px]" />
 													</button>
