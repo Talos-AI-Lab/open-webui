@@ -1,8 +1,11 @@
 # Build Open WebUI .deb and publish to the private APT repository.
-# Manual publish only — Actions → Deploy Debian APT → Run workflow
+# Publishes automatically on updates to experiments, or manually from Actions.
 name: Deploy Debian APT
 
 on:
+  push:
+    branches:
+      - experiments
   workflow_dispatch:
     inputs:
       version:
