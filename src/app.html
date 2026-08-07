@@ -58,6 +58,7 @@
 					document.documentElement.style.setProperty('--color-gray-850', '#050505');
 					document.documentElement.style.setProperty('--color-gray-900', '#000000');
 					document.documentElement.style.setProperty('--color-gray-950', '#000000');
+					document.documentElement.style.setProperty('--color-black', '#000000');
 					document.documentElement.classList.add('dark');
 					metaThemeColorTag.setAttribute('content', '#000000');
 				} else if (localStorage.theme === 'light') {
@@ -70,6 +71,15 @@
 					document.documentElement.classList.add('dark');
 					metaThemeColorTag.setAttribute('content', '#171717');
 				}
+
+				// Apply the theme style (instance default or user override) before first paint.
+				// The regex guard prevents arbitrary class injection from localStorage.
+				try {
+					const themeStyle = localStorage.themeStyle || localStorage.instanceThemeStyle || '';
+					if (themeStyle && themeStyle !== 'default' && /^[a-z0-9-]+$/.test(themeStyle)) {
+						document.documentElement.classList.add('theme-' + themeStyle);
+					}
+				} catch (e) {}
 
 				const preloadHref = document.documentElement.classList.contains('dark')
 					? '/static/splash-dark.png'

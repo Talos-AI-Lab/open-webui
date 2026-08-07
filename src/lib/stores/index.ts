@@ -34,6 +34,7 @@ export const activeUserIds: Writable<null | string[]> = writable(null);
 export const USAGE_POOL: Writable<null | string[]> = writable(null);
 
 export const theme = writable('system');
+export const themeStyle = writable('');
 
 export const shortCodesToEmojis = writable(
 	Object.entries(emojiShortCodes).reduce((acc, [key, value]) => {
@@ -263,6 +264,7 @@ type Settings = {
 	defaultUploadContext?: 'full' | 'focused';
 
 	system?: string;
+	customCss?: string;
 	seed?: number;
 	temperature?: string;
 	repeat_penalty?: string;
@@ -308,6 +310,7 @@ type Config = {
 	name: string;
 	version: string;
 	default_locale: string;
+	default_theme?: string;
 	default_models: string;
 	default_prompt_suggestions: PromptSuggestion[];
 	features: {

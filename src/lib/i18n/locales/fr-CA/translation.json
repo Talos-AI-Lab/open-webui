@@ -3008,5 +3008,19 @@
 	"Your usage stats have been successfully synced.": "",
 	"YouTube": "YouTube",
 	"Youtube Language": "Langue de Youtube",
-	"Youtube Proxy URL": "URL du proxy YouTube"
+	"Youtube Proxy URL": "URL du proxy YouTube",
+	"Applied for all users, including the login page. Use with caution, as invalid CSS can break the interface.": "",
+	"Applies only to you, on top of the selected theme. Saved with this page.": "",
+	"Choose the default theme style for users who have not selected one.": "",
+	"Choose the style layered on top of your theme.": "",
+	"Custom CSS": "",
+	"Default Theme": "",
+	"Dusk": "",
+	"Glacier": "",
+	"High Contrast": "",
+	"Instance Default": "",
+	"Moss": "",
+	"Parchment": "",
+	"Select a theme style": "",
+	"Theme Style": ""
 }

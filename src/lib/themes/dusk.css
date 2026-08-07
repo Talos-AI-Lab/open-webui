@@ -1,0 +1,41 @@
+/* Dusk — blush light, plum dark, rose accents */
+html.theme-dusk {
+	--color-white: oklch(0.962 0.018 330);
+	--color-black: oklch(0.25 0.05 320);
+
+	--color-gray-50: oklch(0.94 0.024 328);
+	--color-gray-100: oklch(0.9 0.03 326);
+	--color-gray-200: oklch(0.865 0.035 325);
+	--color-gray-300: oklch(0.795 0.04 324);
+	--color-gray-400: oklch(0.7 0.045 323);
+	--color-gray-500: oklch(0.6 0.048 322);
+	--color-gray-600: oklch(0.49 0.05 321);
+	--color-gray-700: oklch(0.41 0.05 320);
+	--color-gray-800: oklch(0.33 0.048 319);
+	--color-gray-850: oklch(0.28 0.045 318);
+	--color-gray-900: oklch(0.235 0.04 317);
+	--color-gray-950: oklch(0.185 0.035 316);
+
+	/* Accent: blue ramp remapped to rose */
+	--color-blue-50: oklch(0.96 0.02 355);
+	--color-blue-100: oklch(0.92 0.04 355);
+	--color-blue-200: oklch(0.87 0.07 355);
+	--color-blue-300: oklch(0.79 0.11 355);
+	--color-blue-400: oklch(0.71 0.15 355);
+	--color-blue-500: oklch(0.63 0.17 356);
+	--color-blue-600: oklch(0.55 0.17 358);
+	--color-blue-700: oklch(0.48 0.15 0);
+	--color-blue-800: oklch(0.41 0.13 2);
+	--color-blue-900: oklch(0.36 0.11 3);
+	--color-blue-950: oklch(0.27 0.08 5);
+}
+
+html.theme-dusk #splash-screen,
+html.theme-dusk #auth-page-bg {
+	background: linear-gradient(160deg, #f9eef5 0%, #e6d5ec 100%);
+}
+
+html.theme-dusk.dark #splash-screen,
+html.theme-dusk.dark #auth-page-bg {
+	background: linear-gradient(160deg, #1d1220 0%, #100811 100%);
+}

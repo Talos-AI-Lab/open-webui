@@ -1,0 +1,41 @@
+/* Glacier — arctic ice over deep navy */
+html.theme-glacier {
+	--color-white: oklch(0.968 0.014 230);
+	--color-black: oklch(0.25 0.055 250);
+
+	--color-gray-50: oklch(0.945 0.02 232);
+	--color-gray-100: oklch(0.91 0.025 234);
+	--color-gray-200: oklch(0.875 0.03 236);
+	--color-gray-300: oklch(0.8 0.035 238);
+	--color-gray-400: oklch(0.71 0.04 240);
+	--color-gray-500: oklch(0.62 0.045 242);
+	--color-gray-600: oklch(0.5 0.05 244);
+	--color-gray-700: oklch(0.42 0.055 246);
+	--color-gray-800: oklch(0.33 0.055 248);
+	--color-gray-850: oklch(0.28 0.052 250);
+	--color-gray-900: oklch(0.235 0.048 252);
+	--color-gray-950: oklch(0.185 0.042 254);
+
+	/* Accent: colder, more saturated cyan-blue */
+	--color-blue-50: oklch(0.97 0.015 225);
+	--color-blue-100: oklch(0.93 0.03 225);
+	--color-blue-200: oklch(0.88 0.06 225);
+	--color-blue-300: oklch(0.8 0.1 225);
+	--color-blue-400: oklch(0.71 0.13 225);
+	--color-blue-500: oklch(0.63 0.15 225);
+	--color-blue-600: oklch(0.55 0.15 230);
+	--color-blue-700: oklch(0.48 0.14 235);
+	--color-blue-800: oklch(0.41 0.12 240);
+	--color-blue-900: oklch(0.36 0.1 242);
+	--color-blue-950: oklch(0.27 0.08 245);
+}
+
+html.theme-glacier #splash-screen,
+html.theme-glacier #auth-page-bg {
+	background: linear-gradient(165deg, #ebf3fb 0%, #cfdff2 100%);
+}
+
+html.theme-glacier.dark #splash-screen,
+html.theme-glacier.dark #auth-page-bg {
+	background: linear-gradient(165deg, #0c1826 0%, #060b12 100%);
+}

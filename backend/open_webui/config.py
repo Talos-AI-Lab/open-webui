@@ -1707,6 +1707,10 @@ PENDING_USER_OVERLAY_CONTENT = os.getenv('PENDING_USER_OVERLAY_CONTENT', '')
 
 RESPONSE_WATERMARK = os.getenv('RESPONSE_WATERMARK', '')
 
+DEFAULT_THEME = os.getenv('DEFAULT_THEME', '')
+
+UI_CUSTOM_CSS = os.getenv('UI_CUSTOM_CSS', '')
+
 IFRAME_CSP = os.getenv('IFRAME_CSP', '')
 
 USER_PERMISSIONS_WORKSPACE_MODELS_ACCESS = (
@@ -3055,6 +3059,8 @@ DEFAULT_CONFIG = {
     'ui.pending_user_overlay_title': PENDING_USER_OVERLAY_TITLE,
     'ui.pending_user_overlay_content': PENDING_USER_OVERLAY_CONTENT,
     'ui.watermark': RESPONSE_WATERMARK,
+    'ui.default_theme': DEFAULT_THEME,
+    'ui.custom_css': UI_CUSTOM_CSS,
     'user.permissions': USER_PERMISSIONS,
     'folders.enable': ENABLE_FOLDERS,
     'folders.max_file_count': FOLDER_MAX_FILE_COUNT,

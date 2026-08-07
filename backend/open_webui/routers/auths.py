@@ -130,6 +130,8 @@ ADMIN_CONFIG_KEYS = {
     'PENDING_USER_OVERLAY_TITLE': 'ui.pending_user_overlay_title',
     'PENDING_USER_OVERLAY_CONTENT': 'ui.pending_user_overlay_content',
     'RESPONSE_WATERMARK': 'ui.watermark',
+    'DEFAULT_THEME': 'ui.default_theme',
+    'UI_CUSTOM_CSS': 'ui.custom_css',
 }
 
 LDAP_SERVER_CONFIG_KEYS = {
@@ -1215,6 +1217,8 @@ class AdminConfig(BaseModel):
     PENDING_USER_OVERLAY_TITLE: str | None = None
     PENDING_USER_OVERLAY_CONTENT: str | None = None
     RESPONSE_WATERMARK: str | None = None
+    DEFAULT_THEME: str | None = None
+    UI_CUSTOM_CSS: str | None = None
 
 
 @router.post('/admin/config')
@@ -1237,6 +1241,13 @@ async def update_admin_config(request: Request, form_data: AdminConfig, user=Dep
     # Check if the input string matches the pattern
     if not re.match(pattern, form_data.JWT_EXPIRES_IN):
         updates.pop('auth.jwt_expiry', None)
+
+    if form_data.DEFAULT_THEME is not None and not re.match(r'^[a-z0-9-]*$', form_data.DEFAULT_THEME):
+        updates.pop('ui.default_theme', None)
+    else:
+        updates['ui.default_theme'] = form_data.DEFAULT_THEME or ''
+
+    updates['ui.custom_css'] = form_data.UI_CUSTOM_CSS or ''
 
     await Config.upsert(updates)
     return await get_config_values(ADMIN_CONFIG_KEYS)

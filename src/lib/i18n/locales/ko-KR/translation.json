@@ -2983,5 +2983,19 @@
 	"Your usage stats have been successfully synced.": "당신의 사용 통계가 성공적으로 동기화되었습니다.",
 	"YouTube": "유튜브",
 	"Youtube Language": "Youtube 언어",
-	"Youtube Proxy URL": "Youtube 프록시 URL"
+	"Youtube Proxy URL": "Youtube 프록시 URL",
+	"Applied for all users, including the login page. Use with caution, as invalid CSS can break the interface.": "",
+	"Applies only to you, on top of the selected theme. Saved with this page.": "",
+	"Choose the default theme style for users who have not selected one.": "",
+	"Choose the style layered on top of your theme.": "",
+	"Custom CSS": "",
+	"Default Theme": "",
+	"Dusk": "",
+	"Glacier": "",
+	"High Contrast": "",
+	"Instance Default": "",
+	"Moss": "",
+	"Parchment": "",
+	"Select a theme style": "",
+	"Theme Style": ""
 }

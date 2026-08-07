@@ -14,6 +14,7 @@
 		user,
 		settings,
 		theme,
+		themeStyle,
 		WEBUI_NAME,
 		WEBUI_VERSION,
 		WEBUI_DEPLOYMENT_ID,
@@ -48,7 +49,15 @@
 
 	import '../tailwind.css';
 	import '../app.css';
+	import '$lib/themes';
 	import 'tippy.js/dist/tippy.css';
+
+	import {
+		applyThemeMode,
+		applyThemeStyle,
+		applyUserCustomCss,
+		getEffectiveThemeStyle
+	} from '$lib/utils/theme';
 
 	import { executeToolServer, getBackendConfig, getModels, getVersion } from '$lib/apis';
 	import { getSessionUser, updateUserTimezone, userSignOut } from '$lib/apis/auths';
@@ -910,20 +919,7 @@
 			const newTheme = event.data.theme;
 			localStorage.setItem('theme', newTheme);
 			theme.set(newTheme);
-
-			// Apply theme classes (mirrors logic from chat/Settings/General.svelte)
-			const themes = ['dark', 'light', 'oled-dark'];
-			let themeToApply =
-				newTheme === 'oled-dark' ? 'dark' : newTheme === 'her' ? 'light' : newTheme;
-			if (newTheme === 'system') {
-				themeToApply = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-			}
-			themes
-				.filter((e) => e !== themeToApply)
-				.forEach((e) => {
-					e.split(' ').forEach((cls) => document.documentElement.classList.remove(cls));
-				});
-			themeToApply.split(' ').forEach((cls) => document.documentElement.classList.add(cls));
+			applyThemeMode(newTheme);
 			return;
 		}
 		if (event.type === 'models:refresh') {
@@ -1146,6 +1142,7 @@
 			} else {
 				$socket?.off('events', chatEventHandler);
 				$socket?.off('events:channel', channelEventHandler);
+				applyUserCustomCss('');
 			}
 		});
 
@@ -1182,6 +1179,13 @@
 			// Save Backend Status to Store
 			await config.set(backendConfig);
 			await WEBUI_NAME.set(backendConfig.name);
+
+			// Cache the instance default theme style for the pre-paint script in
+			// app.html, then re-apply in case it changed since the last visit.
+			localStorage.setItem('instanceThemeStyle', backendConfig.default_theme ?? '');
+			const effectiveThemeStyle = getEffectiveThemeStyle();
+			themeStyle.set(effectiveThemeStyle);
+			applyThemeStyle(effectiveThemeStyle);
 
 			if ($config) {
 				await setupSocket($config.features?.enable_websocket ?? true);

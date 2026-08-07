@@ -121,6 +121,11 @@ textarea::-webkit-scrollbar-corner {
 	@apply underline;
 }
 
+.font-primary {
+	/* --theme-font-family is an optional hook for UI themes (see src/lib/themes) */
+	font-family: var(--theme-font-family, 'Archivo', 'Vazirmatn', sans-serif);
+}
+
 .drag-region {
 	-webkit-app-region: drag;
 }

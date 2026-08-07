@@ -1,0 +1,44 @@
+/* Parchment — aged paper, ink and bronze, with a serif face */
+html.theme-parchment {
+	--theme-font-family:
+		'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
+
+	--color-white: oklch(0.965 0.028 90);
+	--color-black: oklch(0.27 0.045 60);
+
+	--color-gray-50: oklch(0.945 0.03 88);
+	--color-gray-100: oklch(0.905 0.035 86);
+	--color-gray-200: oklch(0.87 0.04 85);
+	--color-gray-300: oklch(0.8 0.045 84);
+	--color-gray-400: oklch(0.7 0.05 82);
+	--color-gray-500: oklch(0.6 0.05 80);
+	--color-gray-600: oklch(0.49 0.05 78);
+	--color-gray-700: oklch(0.41 0.048 76);
+	--color-gray-800: oklch(0.33 0.042 74);
+	--color-gray-850: oklch(0.28 0.038 72);
+	--color-gray-900: oklch(0.235 0.032 70);
+	--color-gray-950: oklch(0.19 0.026 68);
+
+	/* Accent: blue ramp remapped to bronze/amber */
+	--color-blue-50: oklch(0.96 0.03 85);
+	--color-blue-100: oklch(0.92 0.05 82);
+	--color-blue-200: oklch(0.87 0.07 78);
+	--color-blue-300: oklch(0.79 0.09 72);
+	--color-blue-400: oklch(0.7 0.11 68);
+	--color-blue-500: oklch(0.62 0.12 62);
+	--color-blue-600: oklch(0.54 0.115 58);
+	--color-blue-700: oklch(0.47 0.105 54);
+	--color-blue-800: oklch(0.4 0.09 50);
+	--color-blue-900: oklch(0.35 0.075 48);
+	--color-blue-950: oklch(0.26 0.055 45);
+}
+
+html.theme-parchment #splash-screen,
+html.theme-parchment #auth-page-bg {
+	background: linear-gradient(160deg, #f8f1dd 0%, #ecdfc0 100%);
+}
+
+html.theme-parchment.dark #splash-screen,
+html.theme-parchment.dark #auth-page-bg {
+	background: linear-gradient(160deg, #221a10 0%, #15100a 100%);
+}

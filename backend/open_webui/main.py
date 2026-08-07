@@ -2144,6 +2144,7 @@ async def get_app_config(request: Request):
         'ui.pending_user_overlay_title',
         'ui.pending_user_overlay_content',
         'ui.watermark',
+        'ui.default_theme',
     )
 
     return {
@@ -2152,6 +2153,7 @@ async def get_app_config(request: Request):
         'name': app.state.WEBUI_NAME,
         'version': VERSION,
         'default_locale': str(DEFAULT_LOCALE),
+        'default_theme': config.get('ui.default_theme'),
         'oauth': {
             # Hide providers (and thus the login buttons / auto-redirect) when OAuth
             # is disabled, without clearing the admin's provider configuration.
@@ -2819,6 +2821,27 @@ async def check_db_health():
 
 
 # --- static assets & files ---
+
+
+@app.get('/static/custom.css')
+async def get_custom_css():
+    """Serve admin-defined custom CSS from config, falling back to the static file.
+
+    Registered before the '/static' mount so this exact path takes precedence.
+    """
+    css = await Config.get('ui.custom_css') or ''
+    if not css:
+        custom_css_file = STATIC_DIR / 'custom.css'
+        if custom_css_file.exists():
+            css = custom_css_file.read_text()
+
+    return Response(
+        content=css,
+        media_type='text/css',
+        headers={'Cache-Control': 'no-cache'},
+    )
+
+
 # Serve build-time static assets (CSS, JS, images, favicon, etc.)
 app.mount('/static', StaticFiles(directory=STATIC_DIR), name='static')
 

@@ -3,7 +3,14 @@
 	import { getLanguages, changeLanguage } from '$lib/i18n';
 	const dispatch = createEventDispatcher();
 
-	import { config, models, settings, theme, user } from '$lib/stores';
+	import { config, models, settings, theme, themeStyle, user } from '$lib/stores';
+	import { THEME_STYLES, getThemeStyleName } from '$lib/themes';
+	import {
+		applyThemeMode,
+		applyThemeStyle,
+		applyUserCustomCss,
+		getEffectiveThemeStyle
+	} from '$lib/utils/theme';
 
 	const i18n = getContext('i18n');
 
@@ -17,8 +24,9 @@
 	export let getModels: Function;
 
 	// General
-	let themes = ['dark', 'light', 'oled-dark'];
 	let selectedTheme = 'system';
+	let selectedThemeStyle = '';
+	let customCss = '';
 
 	let languages: Awaited<ReturnType<typeof getLanguages>> = [];
 	let lang = $i18n.language;
@@ -67,8 +75,10 @@
 	};
 
 	const saveHandler = async () => {
+		applyUserCustomCss(customCss);
 		saveSettings({
 			system: system !== '' ? system : undefined,
+			customCss: customCss !== '' ? customCss : undefined,
 			params: {
 				stream_response: params.stream_response !== null ? params.stream_response : undefined,
 				stream_delta_chunk_size:
@@ -112,6 +122,7 @@
 
 	onMount(async () => {
 		selectedTheme = localStorage.theme ?? 'system';
+		selectedThemeStyle = localStorage.themeStyle ?? '';
 
 		languages = await getLanguages();
 
@@ -120,79 +131,28 @@
 		}
 
 		system = $settings.system ?? '';
+		customCss = $settings.customCss ?? '';
 
 		params = { ...params, ...$settings.params };
 		params.stop = $settings?.params?.stop ? ($settings?.params?.stop ?? []).join(',') : null;
 	});
 
-	const applyTheme = (_theme: string) => {
-		let themeToApply = _theme === 'oled-dark' ? 'dark' : _theme === 'her' ? 'light' : _theme;
-
-		if (_theme === 'system') {
-			themeToApply = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-		}
-
-		if (themeToApply === 'dark' && !_theme.includes('oled')) {
-			document.documentElement.style.setProperty('--color-gray-800', '#333');
-			document.documentElement.style.setProperty('--color-gray-850', '#262626');
-			document.documentElement.style.setProperty('--color-gray-900', '#171717');
-			document.documentElement.style.setProperty('--color-gray-950', '#0d0d0d');
-		}
-
-		themes
-			.filter((e) => e !== themeToApply)
-			.forEach((e) => {
-				e.split(' ').forEach((e) => {
-					document.documentElement.classList.remove(e);
-				});
-			});
-
-		themeToApply.split(' ').forEach((e) => {
-			document.documentElement.classList.add(e);
-		});
-
-		const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-		if (metaThemeColor) {
-			if (_theme.includes('system')) {
-				const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
-					? 'dark'
-					: 'light';
-				console.log('Setting system meta theme color: ' + systemTheme);
-				metaThemeColor.setAttribute('content', systemTheme === 'light' ? '#ffffff' : '#171717');
-			} else {
-				console.log('Setting meta theme color: ' + _theme);
-				metaThemeColor.setAttribute(
-					'content',
-					_theme === 'dark'
-						? '#171717'
-						: _theme === 'oled-dark'
-							? '#000000'
-							: _theme === 'her'
-								? '#983724'
-								: '#ffffff'
-				);
-			}
-		}
-
-		if (typeof window !== 'undefined' && window.applyTheme) {
-			window.applyTheme();
-		}
-
-		if (_theme.includes('oled')) {
-			document.documentElement.style.setProperty('--color-gray-800', '#101010');
-			document.documentElement.style.setProperty('--color-gray-850', '#050505');
-			document.documentElement.style.setProperty('--color-gray-900', '#000000');
-			document.documentElement.style.setProperty('--color-gray-950', '#000000');
-			document.documentElement.classList.add('dark');
-		}
-
-		console.log(_theme);
-	};
-
 	const themeChangeHandler = (_theme: string) => {
 		theme.set(_theme);
 		localStorage.setItem('theme', _theme);
-		applyTheme(_theme);
+		applyThemeMode(_theme);
+	};
+
+	const themeStyleChangeHandler = (_themeStyle: string) => {
+		if (_themeStyle === '') {
+			localStorage.removeItem('themeStyle');
+		} else {
+			localStorage.setItem('themeStyle', _themeStyle);
+		}
+
+		const effectiveThemeStyle = getEffectiveThemeStyle();
+		themeStyle.set(effectiveThemeStyle);
+		applyThemeStyle(effectiveThemeStyle);
 	};
 </script>
 
@@ -220,6 +180,39 @@
 					{/if}
 				</SettingsSelect>
 			</UserSettingRow>
+
+			<UserSettingRow
+				label={$i18n.t('Theme Style')}
+				description={$i18n.t('Choose the style layered on top of your theme.')}
+			>
+				<SettingsSelect
+					bind:value={selectedThemeStyle}
+					ariaLabel={$i18n.t('Theme Style')}
+					placeholder={$i18n.t('Select a theme style')}
+					on:change={() => themeStyleChangeHandler(selectedThemeStyle)}
+				>
+					<option value="">
+						{$i18n.t('Instance Default')} ({$i18n.t(
+							getThemeStyleName($config?.default_theme ?? '')
+						)})
+					</option>
+					{#each THEME_STYLES as themeStyleOption}
+						<option value={themeStyleOption.id}>{$i18n.t(themeStyleOption.name)}</option>
+					{/each}
+				</SettingsSelect>
+			</UserSettingRow>
+
+			<UserSettingField
+				label={$i18n.t('Custom CSS')}
+				description={$i18n.t('Applies only to you, on top of the selected theme. Saved with this page.')}
+			>
+				<Textarea
+					bind:value={customCss}
+					className={systemPromptTextareaClass}
+					rows={3}
+					placeholder={`e.g.) .chat-assistant { font-size: 1.05rem; }`}
+				/>
+			</UserSettingField>
 
 			<UserSettingRow
 				label={$i18n.t('Language')}

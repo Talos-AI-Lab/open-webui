@@ -11,7 +11,9 @@
 	import { WEBUI_BUILD_HASH, WEBUI_VERSION } from '$lib/constants';
 	import { banners as _banners, config, showChangelog } from '$lib/stores';
 	import type { Banner } from '$lib/types';
+	import { THEME_STYLES } from '$lib/themes';
 	import { compareVersion } from '$lib/utils';
+	import { applyThemeStyle, getEffectiveThemeStyle } from '$lib/utils/theme';
 	import { onMount, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import Textarea from '$lib/components/common/Textarea.svelte';
@@ -64,7 +66,14 @@
 
 		await updateBanners();
 
-		await config.set(await getBackendConfig());
+		const backendConfig = await getBackendConfig();
+		await config.set(backendConfig);
+
+		localStorage.setItem('instanceThemeStyle', backendConfig?.default_theme ?? '');
+		applyThemeStyle(getEffectiveThemeStyle());
+		document
+			.querySelector('link[href^="/static/custom.css"]')
+			?.setAttribute('href', `/static/custom.css?v=${Date.now()}`);
 
 		if (res) {
 			saveHandler();
@@ -361,6 +370,37 @@
 			<Events />
 
 			<AdminSettingSection title={$i18n.t('UI')}>
+				<AdminSettingRow
+					label={$i18n.t('Default Theme')}
+					description={$i18n.t('Choose the default theme style for users who have not selected one.')}
+					let:labelId
+				>
+					<SettingsSelect
+						bind:value={adminConfig.DEFAULT_THEME}
+						aria-labelledby={labelId}
+						placeholder={$i18n.t('Select a theme')}
+					>
+						<option value="">{$i18n.t('Default')}</option>
+						{#each THEME_STYLES.filter((themeStyle) => themeStyle.id !== 'default') as themeStyleOption}
+							<option value={themeStyleOption.id}>{$i18n.t(themeStyleOption.name)}</option>
+						{/each}
+					</SettingsSelect>
+				</AdminSettingRow>
+
+				<AdminSettingField
+					label={$i18n.t('Custom CSS')}
+					description={$i18n.t(
+						'Applied for all users, including the login page. Use with caution, as invalid CSS can break the interface.'
+					)}
+				>
+					<Textarea
+						className={textareaClass}
+						placeholder={`e.g.) html.dark { --color-gray-900: #101418; }`}
+						rows={6}
+						bind:value={adminConfig.UI_CUSTOM_CSS}
+					/>
+				</AdminSettingField>
+
 				<div>
 					<div class="mb-2 flex w-full items-start justify-between gap-4">
 						<div class="min-w-0">
